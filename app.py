@@ -53,6 +53,7 @@ def load_data():
     # Load transactions and convert date
     df_tx = pd.read_sql("SELECT * FROM transactions", conn)
     df_tx['InvoiceDate'] = pd.to_datetime(df_tx['InvoiceDate'])
+    df_tx['IsCancelled'] = df_tx['IsCancelled'].astype(bool)
     
     # Load customers
     df_cust = pd.read_sql("SELECT * FROM customers", conn)
