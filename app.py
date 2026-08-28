@@ -186,7 +186,7 @@ with tab_overview:
             plot_bgcolor="rgba(0,0,0,0)",
             paper_bgcolor="rgba(0,0,0,0)"
         )
-        st.plotly_chart(fig_trend, use_container_width=True)
+        st.plotly_chart(fig_trend, width="stretch")
         
     with col_geo:
         st.subheader("Sales share by Country")
@@ -195,7 +195,7 @@ with tab_overview:
         
         fig_geo = px.pie(df_country, values='TotalSales', names='Country', hole=0.4, color_discrete_sequence=['#009999', '#4ECA78', '#FFB84D', '#FF5C75', '#8A8D93'])
         fig_geo.update_layout(margin=dict(l=20, r=20, t=20, b=20), height=350, font=dict(family="Space Mono", color="#E3E5E8"))
-        st.plotly_chart(fig_geo, use_container_width=True)
+        st.plotly_chart(fig_geo, width="stretch")
 
     # 3. Charts Row 2
     st.subheader("Hourly Purchase Patterns")
@@ -211,7 +211,7 @@ with tab_overview:
         category_orders={"HourBin": ["Morning", "Afternoon", "Evening", "Night"]}
     )
     fig_hour.update_layout(margin=dict(l=20, r=20, t=30, b=20), height=300, font=dict(family="Space Mono", color="#E3E5E8"), plot_bgcolor="rgba(0,0,0,0)")
-    st.plotly_chart(fig_hour, use_container_width=True)
+    st.plotly_chart(fig_hour, width="stretch")
 
     # Business Insights
     st.markdown("### 💡 Executive Insights")
@@ -249,7 +249,7 @@ with tab_customers:
             font=dict(family="Space Mono", color="#E3E5E8"),
             margin=dict(l=20, r=20, t=20, b=20)
         )
-        st.plotly_chart(fig_heat, use_container_width=True)
+        st.plotly_chart(fig_heat, width="stretch")
         
     with col_rfm:
         st.subheader("RFM Customer Segmentation")
@@ -269,7 +269,7 @@ with tab_customers:
             title="Customer segments by Size & Avg Lifetime Value (CLV)"
         )
         fig_rfm.update_layout(margin=dict(l=10, r=10, t=30, b=10), height=400, font=dict(family="Space Mono", color="#E3E5E8"))
-        st.plotly_chart(fig_rfm, use_container_width=True)
+        st.plotly_chart(fig_rfm, width="stretch")
         
     st.markdown("### 💡 Customer Retention Insights")
     st.warning("""
@@ -319,7 +319,7 @@ with tab_products:
         paper_bgcolor="rgba(0,0,0,0)",
         margin=dict(l=20, r=20, t=40, b=100)
     )
-    st.plotly_chart(fig_pareto, use_container_width=True)
+    st.plotly_chart(fig_pareto, width="stretch")
 
 # ------------------ TAB 4: A/B TESTING SIMULATOR ------------------
 with tab_ab_testing:
@@ -383,7 +383,7 @@ with tab_ab_testing:
             paper_bgcolor="rgba(0,0,0,0)",
             margin=dict(l=20, r=20, t=40, b=20)
         )
-        st.plotly_chart(fig_curve, use_container_width=True)
+        st.plotly_chart(fig_curve, width="stretch")
 
     st.markdown("### 💡 Experimentation Insight")
     
