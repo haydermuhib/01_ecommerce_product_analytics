@@ -1,10 +1,8 @@
 import os
-import sqlite3
 import pandas as pd
 import numpy as np
 import plotly.express as px
 import plotly.graph_objects as go
-import scipy.stats as stats
 import streamlit as st
 
 # Set page config
@@ -45,20 +43,15 @@ st.markdown("""
 """, unsafe_allow_html=True)
 
 # Path to database
-DB_PATH = os.path.join(os.path.dirname(os.path.abspath(__file__)), "data", "ecommerce.db")
+DB_PATH = os.path.join(os.path.dirname(os.path.abspath(__file__)), "data", "processed", "ecommerce.db")
+
+# Import modular helper functions
+from src.data_processing import load_data_from_db, calculate_cohort_retention
+from src.stats_helpers import perform_z_proportion_test, get_normal_distribution_data
 
 @st.cache_data
 def load_data():
-    conn = sqlite3.connect(DB_PATH)
-    # Load transactions and convert date
-    df_tx = pd.read_sql("SELECT * FROM transactions", conn)
-    df_tx['InvoiceDate'] = pd.to_datetime(df_tx['InvoiceDate'])
-    df_tx['IsCancelled'] = df_tx['IsCancelled'].astype(bool)
-    
-    # Load customers
-    df_cust = pd.read_sql("SELECT * FROM customers", conn)
-    conn.close()
-    return df_tx, df_cust
+    return load_data_from_db(DB_PATH)
 
 # Load datasets
 try:
@@ -189,17 +182,8 @@ with tab_customers:
         st.subheader("Customer Cohort Retention Rate (%)")
         st.markdown("<p style='font-size:12px;color:gray;'>Visualizes user retention month-by-month since signup. Dropping Guest transactions.</p>", unsafe_allow_html=True)
         
-        # Calculate cohort retention
-        df_reg = df_tx[df_tx['CustomerID'] != 'Guest'].copy()
-        df_reg['InvoiceMonth'] = df_reg['InvoiceDate'].dt.to_period('M')
-        df_reg['CohortMonth'] = df_reg.groupby('CustomerID')['InvoiceDate'].transform('min').dt.to_period('M')
-        
-        cohort_group = df_reg.groupby(['CohortMonth', 'InvoiceMonth']).agg(n_customers=('CustomerID', 'nunique')).reset_index()
-        cohort_group['CohortIndex'] = (cohort_group['InvoiceMonth'] - cohort_group['CohortMonth']).apply(lambda x: x.n)
-        
-        cohort_pivot = cohort_group.pivot(index='CohortMonth', columns='CohortIndex', values='n_customers')
-        cohort_sizes = cohort_pivot.iloc[:, 0]
-        retention = cohort_pivot.divide(cohort_sizes, axis=0) * 100
+        # Calculate cohort retention using helper function
+        retention = calculate_cohort_retention(df_tx)
         
         # Plotly Heatmap
         fig_heat = go.Figure(data=go.Heatmap(
@@ -308,66 +292,37 @@ with tab_ab_testing:
         alpha = st.select_slider("Significance Level (α)", options=[0.10, 0.05, 0.01], value=0.05)
         
     with col_results:
-        # Perform stats
-        conversions_c = int(size_c * conv_c)
-        conversions_v = int(size_v * conv_v)
-        
-        p_c = conv_c
-        p_v = conv_v
-        
-        # Pooled proportion
-        p_pool = (conversions_c + conversions_v) / (size_c + size_v)
-        se = np.sqrt(p_pool * (1 - p_pool) * (1/size_c + 1/size_v))
-        
-        # Z-stat
-        z_stat = (p_v - p_c) / se
-        p_value = 2 * (1 - stats.norm.cdf(abs(z_stat)))
-        
-        # Power calculation (approximate)
-        effect_size = (p_v - p_c) / np.sqrt(p_pool * (1 - p_pool))
-        # Critical value (two-tailed)
-        z_crit = stats.norm.ppf(1 - alpha/2)
-        power = 1 - stats.norm.cdf(z_crit - z_stat)
+        # Perform Z-proportion test using helper function
+        test_results = perform_z_proportion_test(size_c, conv_c, size_v, conv_v, alpha)
         
         # Display Stats
         st.markdown("#### Statistical Evaluation Summary")
         
         col_res1, col_res2, col_res3 = st.columns(3)
         with col_res1:
-            st.metric("Z-Statistic", f"{z_stat:.4f}")
+            st.metric("Z-Statistic", f"{test_results['z_stat']:.4f}")
         with col_res2:
-            st.metric("P-Value", f"{p_value:.4f}")
+            st.metric("P-Value", f"{test_results['p_value']:.4f}")
         with col_res3:
-            st.metric("Statistical Power", f"{power * 100:.1f}%")
+            st.metric("Statistical Power", f"{test_results['power'] * 100:.1f}%")
             
-        is_significant = p_value < alpha
-        
-        if is_significant:
+        if test_results['is_significant']:
             st.success(f"🎉 **RESULT: Statistically Significant!** We reject the null hypothesis at α={alpha}. The new checkout variant (Variant B) has a significantly higher conversion rate.")
         else:
             st.error(f"❌ **RESULT: Statistically Insignificant.** We fail to reject the null hypothesis at α={alpha}. The observed difference could be due to random variance.")
             
-        # Draw Normal Curve showing critical regions
-        x_vals = np.linspace(-4, 4, 1000)
-        y_vals = stats.norm.pdf(x_vals)
+        # Draw Normal Curve using helper
+        curve_data = get_normal_distribution_data(test_results['critical_z'])
         
         fig_curve = go.Figure()
-        # Draw standard normal distribution curve
-        fig_curve.add_trace(go.Scatter(x=x_vals, y=y_vals, mode='lines', name='Null Hypothesis H0', line=dict(color='#858796')))
-        
-        # Highlight critical areas for two-tailed test
-        critical_z = stats.norm.ppf(1 - alpha/2)
-        
-        # Rejection area - left
-        x_left = np.linspace(-4, -critical_z, 100)
-        fig_curve.add_trace(go.Scatter(x=x_left, y=stats.norm.pdf(x_left), fill='tozeroy', fillcolor='rgba(231, 74, 59, 0.4)', mode='none', name='Rejection Region (Left)'))
-        # Rejection area - right
-        x_right = np.linspace(critical_z, 4, 100)
-        fig_curve.add_trace(go.Scatter(x=x_right, y=stats.norm.pdf(x_right), fill='tozeroy', fillcolor='rgba(231, 74, 59, 0.4)', mode='none', name='Rejection Region (Right)'))
+        fig_curve.add_trace(go.Scatter(x=curve_data['x'], y=curve_data['y'], mode='lines', name='Null Hypothesis H0', line=dict(color='#858796')))
+        fig_curve.add_trace(go.Scatter(x=curve_data['x_left_rejection'], y=curve_data['y_left_rejection'], fill='tozeroy', fillcolor='rgba(231, 74, 59, 0.4)', mode='none', name='Rejection Region (Left)'))
+        fig_curve.add_trace(go.Scatter(x=curve_data['x_right_rejection'], y=curve_data['y_right_rejection'], fill='tozeroy', fillcolor='rgba(231, 74, 59, 0.4)', mode='none', name='Rejection Region (Right)'))
         
         # Draw user's Z-stat marker
-        fig_curve.add_vline(x=z_stat, line_width=3, line_dash="dash", line_color="#1cc88a" if is_significant else "#e74a3b")
-        fig_curve.add_annotation(x=z_stat, y=0.25, text=f"Your Z-Score: {z_stat:.2f}", showarrow=True, arrowhead=1, bgcolor="#ffffff", bordercolor="#5a5c69")
+        z_stat_val = test_results['z_stat']
+        fig_curve.add_vline(x=z_stat_val, line_width=3, line_dash="dash", line_color="#1cc88a" if test_results['is_significant'] else "#e74a3b")
+        fig_curve.add_annotation(x=z_stat_val, y=0.25, text=f"Your Z-Score: {z_stat_val:.2f}", showarrow=True, arrowhead=1, bgcolor="#ffffff", bordercolor="#5a5c69")
         
         fig_curve.update_layout(
             title="Standard Normal Distribution with Rejection Regions",
@@ -379,7 +334,12 @@ with tab_ab_testing:
         st.plotly_chart(fig_curve, use_container_width=True)
 
     st.markdown("### 💡 Experimentation Insight")
+    
+    # Calculate recommended size details safely
+    req_size = test_results['required_sample_size']
+    req_size_str = f"{req_size:,.0f}" if req_size != float('inf') else "N/A"
+    
     st.info(f"""
     5. **Sample Size & Sensitivity:** Currently, a difference of { (conv_v - conv_c)*100:.2f}% (from {conv_c*100:.1f}% to {conv_v*100:.1f}%) is tested. 
-    To reach a statistical power of **80%** (industry standard) for this small effect size, you need at least **{(16 * p_pool * (1 - p_pool) / ((p_v - p_c)**2)):,.0f} users per group**. If group sizes are smaller than this threshold, the test is underpowered and can lead to a False Negative error.
+    To reach a statistical power of **80%** (industry standard) for this small effect size, you need at least **{req_size_str} users per group**. If group sizes are smaller than this threshold, the test is underpowered and can lead to a False Negative error.
     """)

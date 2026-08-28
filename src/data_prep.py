@@ -3,25 +3,30 @@ import pandas as pd
 import numpy as np
 import sqlite3
 
-# Paths
-DATA_DIR = os.path.dirname(os.path.abspath(__file__))
-CSV_PATH = os.path.join(DATA_DIR, "online_retail.csv")
-DB_PATH = os.path.join(DATA_DIR, "ecommerce.db")
+# Define paths
+SRC_DIR = os.path.dirname(os.path.abspath(__file__))
+PROJECT_DIR = os.path.dirname(SRC_DIR)
+RAW_CSV_PATH = os.path.join(PROJECT_DIR, "data", "raw", "online_retail.csv")
+PROCESSED_DB_PATH = os.path.join(PROJECT_DIR, "data", "processed", "ecommerce.db")
 
 def run_data_pipeline():
     print("🚀 Starting Data Cleaning and Feature Engineering Pipeline...")
     
-    # 1. Load data
-    if not os.path.exists(CSV_PATH):
-        raise FileNotFoundError(f"Dataset not found at {CSV_PATH}. Please run download_data.py first.")
+    # Ensure raw data exists
+    if not os.path.exists(RAW_CSV_PATH):
+        raise FileNotFoundError(f"Raw dataset not found at {RAW_CSV_PATH}. Please run download_data.py first.")
     
-    df = pd.read_csv(CSV_PATH)
+    # Ensure processed directory exists
+    os.makedirs(os.path.dirname(PROCESSED_DB_PATH), exist_ok=True)
+    
+    # 1. Load data
+    df = pd.read_csv(RAW_CSV_PATH)
     print(f"Loaded {df.shape[0]:,} rows.")
     
     # ------------------ PHASE 1: DATA CLEANING ------------------
     print("\n🧹 Phase 1: Data Cleaning...")
     
-    # Check for duplicates
+    # Remove duplicates
     dup_count = df.duplicated().sum()
     if dup_count > 0:
         df = df.drop_duplicates()
@@ -36,17 +41,16 @@ def run_data_pipeline():
     # Identify Cancellations (InvoiceNo starting with 'C' or negative Quantity)
     df['IsCancelled'] = df['InvoiceNo'].astype(str).str.startswith('C') | (df['Quantity'] < 0)
     
-    # Handle missing Customer IDs: Label them as 'Guest' for general transaction analytics
+    # Handle missing Customer IDs: Label them as 'Guest'
     df['CustomerID'] = df['CustomerID'].fillna(-1).astype(int).astype(str)
     df['CustomerID'] = df['CustomerID'].replace('-1', 'Guest')
     
-    # Filter out records with invalid UnitPrice (<= 0) for core transaction logic
-    # Note: Gift adjustments or debts often have UnitPrice = 0
+    # Filter out records with invalid UnitPrice (<= 0)
     invalid_price_count = (df['UnitPrice'] <= 0).sum()
     df = df[df['UnitPrice'] > 0]
     print(f"Removed {invalid_price_count:,} transactions with UnitPrice <= 0.")
     
-    # Outlier Detection (Capping using 99.9th percentile to remove extreme bad inputs, keeping bulk orders)
+    # Outlier Detection (Capping using 99.9th percentile)
     qty_cap = df['Quantity'].abs().quantile(0.999)
     price_cap = df['UnitPrice'].quantile(0.999)
     print(f"Quantity 99.9th percentile cap: {qty_cap}")
@@ -95,7 +99,7 @@ def run_data_pipeline():
     
     # Save the cleaned transactions to SQLite database
     print(f"\n💾 Saving {len(df):,} cleaned transactions to database...")
-    conn = sqlite3.connect(DB_PATH)
+    conn = sqlite3.connect(PROCESSED_DB_PATH)
     df.to_sql("transactions", conn, if_exists="replace", index=False)
     
     # ------------------ CUSTOMER SEGMENTATION (RFM & CLV) ------------------
@@ -104,7 +108,7 @@ def run_data_pipeline():
     # Isolate registered customers (not Guest) for cohort & RFM profiling
     registered_tx = df[(df['CustomerID'] != 'Guest') & (~df['IsCancelled'])].copy()
     
-    # Reference date for Recency (one day after latest transaction)
+    # Reference date for Recency
     ref_date = registered_tx['InvoiceDate'].max() + pd.Timedelta(days=1)
     
     # Aggregate to customer level
@@ -129,12 +133,8 @@ def run_data_pipeline():
     # Calculate Customer Lifetime Value (CLV) simple proxy: Average order size * Frequency
     customer_profiles['CLV'] = customer_profiles['Monetary']
     
-    # Score RFM from 1 to 5 (5 is best)
-    # Recency: lower is better -> ascending rank
+    # Score RFM from 1 to 5
     customer_profiles['R_Score'] = pd.qcut(customer_profiles['Recency'], q=5, labels=[5, 4, 3, 2, 1]).astype(int)
-    
-    # Frequency & Monetary: higher is better -> descending rank
-    # Note: Frequency may have duplicates in quantiles, use rank or custom binning
     customer_profiles['F_Score'] = pd.qcut(customer_profiles['Frequency'].rank(method='first'), q=5, labels=[1, 2, 3, 4, 5]).astype(int)
     customer_profiles['M_Score'] = pd.qcut(customer_profiles['Monetary'], q=5, labels=[1, 2, 3, 4, 5]).astype(int)
     
