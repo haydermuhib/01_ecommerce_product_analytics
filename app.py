@@ -13,14 +13,14 @@ st.set_page_config(
     initial_sidebar_state="expanded"
 )
 
-# Custom CSS for premium Bento design-system styling
+# Custom CSS for premium Neumorphic Dark Theme styling
 st.markdown("""
 <style>
-    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=JetBrains+Mono&display=swap');
+    @import url('https://fonts.googleapis.com/css2?family=Space+Mono:ital,wght@0,400;0,700;1,400;1,700&family=JetBrains+Mono&display=swap');
 
     /* Global fonts */
     html, body, [class*="css"], .stMarkdown {
-        font-family: 'Inter', sans-serif !important;
+        font-family: 'Space Mono', monospace !important;
     }
     code, pre {
         font-family: 'JetBrains Mono', monospace !important;
@@ -28,55 +28,61 @@ st.markdown("""
 
     /* Page background and general typography */
     .stApp {
-        background-color: #FFF5E6;
-        color: #111827;
+        background-color: #1E1F22;
+        color: #E3E5E8;
     }
 
-    /* Bento Grid Card styling */
-    .bento-card {
-        background-color: #ffffff;
-        border-radius: 16px;
+    /* Neumorphic Card styling (Soft 3D extruded look in Dark Mode) */
+    .neumorphic-card {
+        background-color: #1E1F22;
+        border-radius: 20px;
         padding: 24px;
-        border: 1px solid rgba(17, 24, 39, 0.05);
-        box-shadow: 0 4px 12px rgba(17, 24, 39, 0.03);
-        margin-bottom: 20px;
-        transition: transform 0.2s ease, box-shadow 0.2s ease;
+        box-shadow: 6px 6px 12px #131416, -6px -6px 12px #292a2e;
+        margin-bottom: 24px;
+        transition: all 0.3s ease;
     }
-    .bento-card:hover {
-        transform: translateY(-2px);
-        box-shadow: 0 8px 16px rgba(17, 24, 39, 0.06);
+    .neumorphic-card:hover {
+        box-shadow: 3px 3px 6px #131416, -3px -3px 6px #292a2e;
+        transform: translateY(1px);
     }
-    .bento-title {
-        font-size: 12px;
-        color: #80A1C1;
+    
+    .neumorphic-title {
+        font-size: 11px;
+        color: #009999;
         text-transform: uppercase;
         font-weight: 700;
-        letter-spacing: 0.07em;
+        letter-spacing: 0.1em;
     }
-    .bento-value {
-        font-size: 28px;
-        font-weight: 800;
-        color: #111827;
-        margin-top: 6px;
+    .neumorphic-value {
+        font-size: 26px;
+        font-weight: 700;
+        color: #E3E5E8;
+        margin-top: 8px;
     }
 
     /* Sidebar styling override */
     section[data-testid="stSidebar"] {
-        background-color: #FFF0DB !important;
-        border-right: 1px solid rgba(17, 24, 39, 0.05);
+        background-color: #1E1F22 !important;
+        border-right: 1px solid #131416;
     }
     section[data-testid="stSidebar"] h1, section[data-testid="stSidebar"] h2 {
-        color: #111827;
+        color: #E3E5E8;
     }
     
     /* Navigation tabs styling */
     button[data-baseweb="tab"] {
-        font-weight: 600 !important;
-        color: #80A1C1 !important;
+        font-weight: 700 !important;
+        color: #E3E5E8 !important;
+        background-color: #1E1F22 !important;
+        border-radius: 12px 12px 0 0 !important;
+        box-shadow: 4px 4px 8px #131416, -4px -4px 8px #292a2e !important;
+        margin-right: 12px !important;
+        padding: 12px 24px !important;
+        border: none !important;
     }
     button[aria-selected="true"] {
-        color: #111827 !important;
-        border-bottom-color: #80A1C1 !important;
+        box-shadow: inset 4px 4px 8px #131416, inset -4px -4px 8px #292a2e !important;
+        color: #009999 !important;
     }
 </style>
 """, unsafe_allow_html=True)
@@ -148,15 +154,15 @@ with tab_overview:
     active_cust = df_filtered[df_filtered['CustomerID'] != 'Guest']['CustomerID'].nunique()
     
     with col1:
-        st.markdown(f"""<div class='bento-card'><div class='bento-title'>Total Revenue</div><div class='bento-value'>${total_rev:,.2f}</div></div>""", unsafe_allow_html=True)
+        st.markdown(f"""<div class='neumorphic-card'><div class='neumorphic-title'>Total Revenue</div><div class='neumorphic-value'>${total_rev:,.2f}</div></div>""", unsafe_allow_html=True)
     with col2:
-        st.markdown(f"""<div class='bento-card'><div class='bento-title' style='color: #16A34A;'>Total Profit</div><div class='bento-value'>${total_prof:,.2f}</div></div>""", unsafe_allow_html=True)
+        st.markdown(f"""<div class='neumorphic-card'><div class='neumorphic-title' style='color: #4ECA78;'>Total Profit</div><div class='neumorphic-value'>${total_prof:,.2f}</div></div>""", unsafe_allow_html=True)
     with col3:
-        st.markdown(f"""<div class='bento-card'><div class='bento-title'>Avg Order Value (AOV)</div><div class='bento-value'>${aov:,.2f}</div></div>""", unsafe_allow_html=True)
+        st.markdown(f"""<div class='neumorphic-card'><div class='neumorphic-title'>Avg Order Value</div><div class='neumorphic-value'>${aov:,.2f}</div></div>""", unsafe_allow_html=True)
     with col4:
-        st.markdown(f"""<div class='bento-card'><div class='bento-title' style='color: #D97706;'>Profit Margin %</div><div class='bento-value'>{margin_pct:.1f}%</div></div>""", unsafe_allow_html=True)
+        st.markdown(f"""<div class='neumorphic-card'><div class='neumorphic-title' style='color: #FFB84D;'>Profit Margin %</div><div class='neumorphic-value'>{margin_pct:.1f}%</div></div>""", unsafe_allow_html=True)
     with col5:
-        st.markdown(f"""<div class='bento-card'><div class='bento-title' style='color: #DC2626;'>Unique Customers</div><div class='bento-value'>{active_cust:,}</div></div>""", unsafe_allow_html=True)
+        st.markdown(f"""<div class='neumorphic-card'><div class='neumorphic-title' style='color: #FF5C75;'>Unique Customers</div><div class='neumorphic-value'>{active_cust:,}</div></div>""", unsafe_allow_html=True)
 
     # 2. Charts Row 1
     col_trend, col_geo = st.columns([2, 1])
@@ -170,13 +176,13 @@ with tab_overview:
         df_monthly['InvoiceDate'] = df_monthly['InvoiceDate'].astype(str)
         
         fig_trend = go.Figure()
-        fig_trend.add_trace(go.Bar(x=df_monthly['InvoiceDate'], y=df_monthly['TotalSales'], name='Revenue', marker_color='#80A1C1'))
-        fig_trend.add_trace(go.Scatter(x=df_monthly['InvoiceDate'], y=df_monthly['Profit'], name='Profit', line=dict(color='#16A34A', width=3)))
+        fig_trend.add_trace(go.Bar(x=df_monthly['InvoiceDate'], y=df_monthly['TotalSales'], name='Revenue', marker_color='#009999'))
+        fig_trend.add_trace(go.Scatter(x=df_monthly['InvoiceDate'], y=df_monthly['Profit'], name='Profit', line=dict(color='#4ECA78', width=3)))
         fig_trend.update_layout(
             margin=dict(l=20, r=20, t=20, b=20),
             height=350,
             hovermode="x unified",
-            font=dict(family="Inter", color="#111827"),
+            font=dict(family="Space Mono", color="#E3E5E8"),
             plot_bgcolor="rgba(0,0,0,0)",
             paper_bgcolor="rgba(0,0,0,0)"
         )
@@ -187,8 +193,8 @@ with tab_overview:
         df_country = df_filtered[~df_filtered['IsCancelled']].groupby('Country')['TotalSales'].sum().reset_index()
         df_country = df_country.sort_values(by='TotalSales', ascending=False).head(8)
         
-        fig_geo = px.pie(df_country, values='TotalSales', names='Country', hole=0.4, color_discrete_sequence=['#80A1C1', '#FAD4C0', '#E6A885', '#FFF0DB', '#858796'])
-        fig_geo.update_layout(margin=dict(l=20, r=20, t=20, b=20), height=350, font=dict(family="Inter", color="#111827"))
+        fig_geo = px.pie(df_country, values='TotalSales', names='Country', hole=0.4, color_discrete_sequence=['#009999', '#4ECA78', '#FFB84D', '#FF5C75', '#8A8D93'])
+        fig_geo.update_layout(margin=dict(l=20, r=20, t=20, b=20), height=350, font=dict(family="Space Mono", color="#E3E5E8"))
         st.plotly_chart(fig_geo, use_container_width=True)
 
     # 3. Charts Row 2
@@ -201,10 +207,10 @@ with tab_overview:
         y="Orders", 
         color="DayType", 
         barmode="group",
-        color_discrete_map={'Weekday': '#80A1C1', 'Weekend': '#FAD4C0'},
+        color_discrete_map={'Weekday': '#009999', 'Weekend': '#FFB84D'},
         category_orders={"HourBin": ["Morning", "Afternoon", "Evening", "Night"]}
     )
-    fig_hour.update_layout(margin=dict(l=20, r=20, t=30, b=20), height=300, font=dict(family="Inter", color="#111827"), plot_bgcolor="rgba(0,0,0,0)")
+    fig_hour.update_layout(margin=dict(l=20, r=20, t=30, b=20), height=300, font=dict(family="Space Mono", color="#E3E5E8"), plot_bgcolor="rgba(0,0,0,0)")
     st.plotly_chart(fig_hour, use_container_width=True)
 
     # Business Insights
@@ -225,12 +231,12 @@ with tab_customers:
         # Calculate cohort retention using helper function
         retention = calculate_cohort_retention(df_tx)
         
-        # Plotly Heatmap using Bento color palette gradient (warm surface to steel blue)
+        # Plotly Heatmap using Neumorphism Dark Theme (charcoal to teal scale)
         fig_heat = go.Figure(data=go.Heatmap(
             z=retention.values,
             x=retention.columns,
             y=retention.index.astype(str),
-            colorscale=[[0, '#FFF5E6'], [0.2, '#EAECEE'], [1, '#80A1C1']],
+            colorscale=[[0, '#1E1F22'], [0.2, '#292a2e'], [1, '#009999']],
             colorbar=dict(title="Retention %"),
             text=np.round(retention.values, 1),
             texttemplate="%{text}%",
@@ -240,7 +246,7 @@ with tab_customers:
             xaxis=dict(title="Months Since Signup (Cohort Index)"),
             yaxis=dict(title="Cohort Signup Month"),
             height=400,
-            font=dict(family="Inter", color="#111827"),
+            font=dict(family="Space Mono", color="#E3E5E8"),
             margin=dict(l=20, r=20, t=20, b=20)
         )
         st.plotly_chart(fig_heat, use_container_width=True)
@@ -259,10 +265,10 @@ with tab_customers:
             path=['Segment'], 
             values='CustomerCount',
             color='AvgMonetary',
-            color_continuous_scale=[[0, '#FFF5E6'], [1, '#80A1C1']],
+            color_continuous_scale=[[0, '#1E1F22'], [1, '#009999']],
             title="Customer segments by Size & Avg Lifetime Value (CLV)"
         )
-        fig_rfm.update_layout(margin=dict(l=10, r=10, t=30, b=10), height=400, font=dict(family="Inter", color="#111827"))
+        fig_rfm.update_layout(margin=dict(l=10, r=10, t=30, b=10), height=400, font=dict(family="Space Mono", color="#E3E5E8"))
         st.plotly_chart(fig_rfm, use_container_width=True)
         
     st.markdown("### 💡 Customer Retention Insights")
@@ -291,14 +297,14 @@ with tab_products:
         x=top_n['Description'], 
         y=top_n['Revenue'], 
         name='Revenue ($)', 
-        marker_color='#80A1C1'
+        marker_color='#009999'
     ))
     fig_pareto.add_trace(go.Scatter(
         x=top_n['Description'], 
         y=top_n['CumulativePct'], 
         name='Cumulative %', 
         yaxis='y2', 
-        line=dict(color='#D97706', width=3)
+        line=dict(color='#FFB84D', width=3)
     ))
     
     fig_pareto.update_layout(
@@ -308,7 +314,7 @@ with tab_products:
         xaxis=dict(tickangle=-45),
         legend=dict(x=0.02, y=0.98),
         height=450,
-        font=dict(family="Inter", color="#111827"),
+        font=dict(family="Space Mono", color="#E3E5E8"),
         plot_bgcolor="rgba(0,0,0,0)",
         paper_bgcolor="rgba(0,0,0,0)",
         margin=dict(l=20, r=20, t=40, b=100)
@@ -357,23 +363,22 @@ with tab_ab_testing:
             
         # Draw Normal Curve using helper
         curve_data = get_normal_distribution_data(test_results['critical_z'])
-        
         fig_curve = go.Figure()
-        fig_curve.add_trace(go.Scatter(x=curve_data['x'], y=curve_data['y'], mode='lines', name='Null Hypothesis H0', line=dict(color='#80A1C1')))
-        fig_curve.add_trace(go.Scatter(x=curve_data['x_left_rejection'], y=curve_data['y_left_rejection'], fill='tozeroy', fillcolor='rgba(220, 38, 38, 0.4)', mode='none', name='Rejection Region (Left)'))
-        fig_curve.add_trace(go.Scatter(x=curve_data['x_right_rejection'], y=curve_data['y_right_rejection'], fill='tozeroy', fillcolor='rgba(220, 38, 38, 0.4)', mode='none', name='Rejection Region (Right)'))
+        fig_curve.add_trace(go.Scatter(x=curve_data['x'], y=curve_data['y'], mode='lines', name='Null Hypothesis H0', line=dict(color='#009999')))
+        fig_curve.add_trace(go.Scatter(x=curve_data['x_left_rejection'], y=curve_data['y_left_rejection'], fill='tozeroy', fillcolor='rgba(255, 92, 117, 0.35)', mode='none', name='Rejection Region (Left)'))
+        fig_curve.add_trace(go.Scatter(x=curve_data['x_right_rejection'], y=curve_data['y_right_rejection'], fill='tozeroy', fillcolor='rgba(255, 92, 117, 0.35)', mode='none', name='Rejection Region (Right)'))
         
         # Draw user's Z-stat marker
         z_stat_val = test_results['z_stat']
-        fig_curve.add_vline(x=z_stat_val, line_width=3, line_dash="dash", line_color="#16A34A" if test_results['is_significant'] else "#DC2626")
-        fig_curve.add_annotation(x=z_stat_val, y=0.25, text=f"Your Z-Score: {z_stat_val:.2f}", showarrow=True, arrowhead=1, bgcolor="#ffffff", bordercolor="#111827")
+        fig_curve.add_vline(x=z_stat_val, line_width=3, line_dash="dash", line_color="#4ECA78" if test_results['is_significant'] else "#FF5C75")
+        fig_curve.add_annotation(x=z_stat_val, y=0.25, text=f"Your Z-Score: {z_stat_val:.2f}", showarrow=True, arrowhead=1, bgcolor="#1E1F22", bordercolor="#E3E5E8")
         
         fig_curve.update_layout(
             title="Standard Normal Distribution with Rejection Regions",
             xaxis=dict(title="Z-value"),
             yaxis=dict(title="Probability Density"),
             height=320,
-            font=dict(family="Inter", color="#111827"),
+            font=dict(family="Space Mono", color="#E3E5E8"),
             plot_bgcolor="rgba(0,0,0,0)",
             paper_bgcolor="rgba(0,0,0,0)",
             margin=dict(l=20, r=20, t=40, b=20)
