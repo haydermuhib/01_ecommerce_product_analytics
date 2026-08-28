@@ -21,3 +21,7 @@ data/processed/
 .idea/
 .gemini/
 .agents/
+
+
+#notebook
+notebooks/test.ipynb
