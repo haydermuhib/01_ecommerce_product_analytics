@@ -277,6 +277,38 @@ with tab_customers:
     4. **LTV Concentration:** The **'VIP Champions'** group accounts for **under 8%** of the customer headcount but generates **over 35% of total sales revenue**, highlighting the value of loyalty systems.
     """)
 
+    st.markdown("---")
+    st.subheader("Predictive Churn Risk Assessment")
+    st.markdown("<p style='font-size:12px;color:gray;'>Input customer metrics to predict their probability of churning (90+ days without a purchase).</p>", unsafe_allow_html=True)
+    
+    col_ml_in, col_ml_out = st.columns([1, 1])
+    with col_ml_in:
+        input_freq = st.number_input("Customer Purchase Frequency (Orders)", min_value=1, max_value=1000, value=5, step=1)
+        input_money = st.number_input("Customer Monetary Value ($)", min_value=1.0, max_value=100000.0, value=150.0, step=10.0)
+        input_tenure = st.number_input("Customer Tenure (Days Active)", min_value=0, max_value=1000, value=60, step=5)
+        
+    with col_ml_out:
+        import pickle
+        model_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), "models", "churn_model.pkl")
+        if os.path.exists(model_path):
+            with open(model_path, "rb") as f:
+                model_pipeline = pickle.load(f)
+            
+            features_df = pd.DataFrame([[input_freq, input_money, input_tenure]], columns=["Frequency", "Monetary", "Tenure"])
+            prob = model_pipeline.predict_proba(features_df)[0][1]
+            pred = model_pipeline.predict(features_df)[0]
+            
+            st.write("")
+            st.write("")
+            st.markdown(f"<div class='neumorphic-card' style='text-align: center;'><div class='neumorphic-title'>Churn Probability</div><div class='neumorphic-value'>{prob * 100:.1f}%</div></div>", unsafe_allow_html=True)
+            
+            if pred == 1:
+                st.error("Status: High Churn Risk (Inactive expected). Recommend proactive email engagement.")
+            else:
+                st.success("Status: Low Churn Risk (Active expected).")
+        else:
+            st.warning("Model file not found. Please run src/train_model.py first to compile the churn prediction model.")
+
 # ------------------ TAB 3: PRODUCT PERFORMANCE ------------------
 with tab_products:
     st.subheader("Pareto Analysis: Top Selling Items (80/20 Rule)")
