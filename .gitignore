@@ -12,10 +12,7 @@ __pycache__/
 # Jupyter Notebook checkpoints
 .ipynb_checkpoints
 
-# Datasets and Databases (Avoid committing large files)
 data/raw/
-data/processed/
-models/*.pkl
 
 # IDEs
 .vscode/
