@@ -90,9 +90,13 @@ st.markdown("""
 # Path to database
 DB_PATH = os.path.join(os.path.dirname(os.path.abspath(__file__)), "data", "processed", "ecommerce.db")
 
+# Add src directory to system path for clean imports
+import sys
+sys.path.insert(0, os.path.join(os.path.dirname(os.path.abspath(__file__)), "src"))
+
 # Import modular helper functions
-from src.data_processing import load_data_from_db, calculate_cohort_retention
-from src.stats_helpers import perform_z_proportion_test, get_normal_distribution_data
+from data_processing import load_data_from_db, calculate_cohort_retention
+from stats_helpers import perform_z_proportion_test, get_normal_distribution_data
 
 @st.cache_data
 def load_data():
@@ -116,7 +120,16 @@ selected_countries = st.sidebar.multiselect("Select Countries", countries, defau
 # Date filters
 min_date = df_tx['InvoiceDate'].min().date()
 max_date = df_tx['InvoiceDate'].max().date()
-start_date, end_date = st.sidebar.date_input("Select Date Range", [min_date, max_date], min_value=min_date, max_value=max_date)
+date_range = st.sidebar.date_input("Select Date Range", [min_date, max_date], min_value=min_date, max_value=max_date)
+
+# Safely extract start and end dates from user input (handles partial range selection)
+if isinstance(date_range, (list, tuple)) and len(date_range) == 2:
+    start_date, end_date = date_range
+elif isinstance(date_range, (list, tuple)) and len(date_range) == 1:
+    start_date = date_range[0]
+    end_date = max_date
+else:
+    start_date, end_date = min_date, max_date
 
 # Filter the transaction dataframe
 mask = (df_tx['Country'].isin(selected_countries)) & \
