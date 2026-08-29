@@ -368,56 +368,105 @@ with tab_products:
 
     st.markdown("---")
     st.subheader("Seasonal Product Performance")
-    st.markdown("<p style='font-size:12px;color:gray;'>Analyze top-selling products by season to uncover seasonal demand shifts.</p>", unsafe_allow_html=True)
+    st.markdown("<p style='font-size:12px;color:gray;'>Analyze product performance by season with hemisphere-aware date partitioning.</p>", unsafe_allow_html=True)
     
-    # Map months to seasons
-    df_filtered['Season'] = df_filtered['InvoiceDate'].dt.month.map(
-        lambda m: "Winter" if m in [12, 1, 2] else "Spring" if m in [3, 4, 5] else "Summer" if m in [6, 7, 8] else "Autumn"
-    )
+    # Hemisphere-aware Season Mapping function
+    def map_season_hemisphere(row):
+        month = row['InvoiceDate'].month
+        country = row['Country']
+        
+        # Southern Hemisphere countries (e.g., Australia is in the online retail dataset)
+        southern_countries = ["Australia", "New Zealand", "South Africa", "Brazil"]
+        
+        if country in southern_countries:
+            if month in [12, 1, 2]:
+                return "Summer"
+            elif month in [3, 4, 5]:
+                return "Autumn"
+            elif month in [6, 7, 8]:
+                return "Winter"
+            else:
+                return "Spring"
+        else:
+            # Northern Hemisphere default (UK, Germany, France, etc.)
+            if month in [12, 1, 2]:
+                return "Winter"
+            elif month in [3, 4, 5]:
+                return "Spring"
+            elif month in [6, 7, 8]:
+                return "Summer"
+            else:
+                return "Autumn"
+
+    # Map seasons on filtered dataframe
+    df_filtered['Season'] = df_filtered.apply(map_season_hemisphere, axis=1)
     
     col_season_sel, col_season_chart = st.columns([1, 2])
     with col_season_sel:
         selected_season = st.selectbox("Select Season to Analyze", ["Winter", "Spring", "Summer", "Autumn"])
         
-        # Filter for selected season and calculate top selling products
+        # UI controls for switching direction (Top vs Bottom) and selecting counts
+        metric_direction = st.radio("Performance Direction", ["Top Selling (High Revenue)", "Bottom Selling (Low Revenue)"])
+        num_products = st.slider("Number of Products to Display", min_value=5, max_value=50, value=10, step=5)
+        
+        # Filter for selected season and calculate product metrics
         df_season = df_filtered[(df_filtered['Season'] == selected_season) & (~df_filtered['IsCancelled'])]
-        df_season_top = df_season.groupby('Description').agg(
+        
+        # Group by description
+        df_season_grouped = df_season.groupby('Description').agg(
             Revenue=('TotalSales', 'sum'),
             Units=('Quantity', 'sum')
-        ).reset_index().sort_values(by='Revenue', ascending=False).head(10)
+        ).reset_index()
+        
+        # Filter out 0 revenue items if checking bottom selling
+        if "Bottom" in metric_direction:
+            df_season_grouped = df_season_grouped[df_season_grouped['Revenue'] > 0]
+            df_season_top = df_season_grouped.sort_values(by='Revenue', ascending=True).head(num_products)
+        else:
+            df_season_top = df_season_grouped.sort_values(by='Revenue', ascending=False).head(num_products)
         
         st.write("")
         if len(df_season_top) > 0:
+            top_item = df_season_top.iloc[-1]['Description'] if "Bottom" in metric_direction else df_season_top.iloc[0]['Description']
             st.markdown(f"""
             **Seasonal Highlights for {selected_season}:**
-            * Total transactions analyzed: **{len(df_season):,}**
-            * Top revenue generator: **{df_season_top.iloc[0]['Description']}**
+            * Total transactions: **{len(df_season):,}**
+            * Display count: **{len(df_season_top)}**
+            * Primary item in view: **{top_item}**
             * Total seasonal revenue: **${df_season['TotalSales'].sum():,.2f}**
             """)
         else:
             st.markdown(f"""
             **Seasonal Highlights for {selected_season}:**
-            * Total transactions analyzed: **0**
-            * Top revenue generator: **N/A**
+            * Total transactions: **0**
+            * Display count: **0**
+            * Primary item in view: **N/A**
             * Total seasonal revenue: **$0.00**
             """)
         
     with col_season_chart:
         if len(df_season_top) > 0:
-            # Sort values so that the highest bar appears at the top of the horizontal bar chart
+            # Sort values so that the highest/lowest bars appear correctly on the horizontal axis
             df_season_top = df_season_top.sort_values(by='Revenue', ascending=True)
+            
+            title_text = f"Top {num_products} Products in {selected_season}" if "Top" in metric_direction else f"Bottom {num_products} Products in {selected_season}"
+            
             fig_season = px.bar(
                 df_season_top,
                 x='Revenue',
                 y='Description',
                 orientation='h',
-                title=f"Top 10 Products by Revenue in {selected_season}",
+                title=title_text,
                 labels={'Revenue': 'Revenue ($)', 'Description': 'Product'},
                 color_discrete_sequence=['#009999']
             )
+            
+            # Dynamic height calculation to enable vertical scrolling without squishing bars
+            chart_height = 200 + (25 * num_products)
+            
             fig_season.update_layout(
-                margin=dict(l=10, r=10, t=30, b=10),
-                height=350,
+                margin=dict(l=10, r=10, t=45, b=10),
+                height=chart_height,
                 font=dict(family="Space Mono", color="#E3E5E8"),
                 plot_bgcolor="rgba(0,0,0,0)",
                 paper_bgcolor="rgba(0,0,0,0)"
