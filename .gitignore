@@ -25,3 +25,6 @@ data/processed/
 
 #notebook
 notebooks/test.ipynb
+
+#etc
+project_plan.md
