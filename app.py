@@ -8,7 +8,7 @@ import streamlit as st
 # Set page config
 st.set_page_config(
     page_title="E-Commerce Growth Analytics & A/B Testing Dashboard",
-    page_icon="📊",
+    page_icon=None,
     layout="wide",
     initial_sidebar_state="expanded"
 )
@@ -130,15 +130,15 @@ if df_filtered.empty:
     df_filtered = df_tx[df_tx['Country'].isin(selected_countries)].copy()
 
 # --- APP LAYOUT ---
-st.title("📊 E-Commerce Growth Analytics & A/B Testing Dashboard")
+st.title("E-Commerce Growth Analytics & A/B Testing Dashboard")
 st.markdown("---")
 
 # Navigation tabs
 tab_overview, tab_customers, tab_products, tab_ab_testing = st.tabs([
-    "📈 Executive Overview", 
-    "👤 Customer Cohorts & RFM", 
-    "📦 Product Performance", 
-    "🔬 A/B Testing Simulator"
+    "Executive Overview", 
+    "Customer Cohorts & RFM", 
+    "Product Performance", 
+    "A/B Testing Simulator"
 ])
 
 # ------------------ TAB 1: EXECUTIVE OVERVIEW ------------------
@@ -214,7 +214,7 @@ with tab_overview:
     st.plotly_chart(fig_hour, width="stretch")
 
     # Business Insights
-    st.markdown("### 💡 Executive Insights")
+    st.markdown("### Executive Insights")
     st.info("""
     1. **Regional Concentration:** The UK represents the majority of raw transactional volume, but European countries like Germany and France exhibit **12% higher Average Order Value (AOV)**, suggesting expansion targets.
     2. **Peak Buying Activity:** Sales peak heavily during the **Afternoon (12:00 PM - 4:00 PM)** on weekdays, and drop significantly on weekends. Scheduled marketing newsletters should target 11:30 AM on weekdays to maximize click-through sales.
@@ -271,7 +271,7 @@ with tab_customers:
         fig_rfm.update_layout(margin=dict(l=10, r=10, t=30, b=10), height=400, font=dict(family="Space Mono", color="#E3E5E8"))
         st.plotly_chart(fig_rfm, width="stretch")
         
-    st.markdown("### 💡 Customer Retention Insights")
+    st.markdown("### Customer Retention Insights")
     st.warning("""
     3. **The 3-Month Cliff:** Across all cohorts, customer retention drops off by **over 60%** in the first 30 days and stabilizes around **15-20% by Month 3**. Retention-oriented discount codes should target customers at Day 25 to flatten this cliff.
     4. **LTV Concentration:** The **'VIP Champions'** group accounts for **under 8%** of the customer headcount but generates **over 35% of total sales revenue**, highlighting the value of loyalty systems.
@@ -323,7 +323,7 @@ with tab_products:
 
 # ------------------ TAB 4: A/B TESTING SIMULATOR ------------------
 with tab_ab_testing:
-    st.subheader("🔬 Checkout Flow Redesign A/B Test Evaluator")
+    st.subheader("Checkout Flow Redesign A/B Test Evaluator")
     st.markdown("""
     This simulator models an A/B test evaluated on a **Z-proportion hypothesis test**. 
     Use the sliders to adjust variables representing the control (current checkout page) and variant (redesigned checkout page).
@@ -357,9 +357,9 @@ with tab_ab_testing:
             st.metric("Statistical Power", f"{test_results['power'] * 100:.1f}%")
             
         if test_results['is_significant']:
-            st.success(f"🎉 **RESULT: Statistically Significant!** We reject the null hypothesis at α={alpha}. The new checkout variant (Variant B) has a significantly higher conversion rate.")
+            st.success(f"**RESULT: Statistically Significant!** We reject the null hypothesis at α={alpha}. The new checkout variant (Variant B) has a significantly higher conversion rate.")
         else:
-            st.error(f"❌ **RESULT: Statistically Insignificant.** We fail to reject the null hypothesis at α={alpha}. The observed difference could be due to random variance.")
+            st.error(f"**RESULT: Statistically Insignificant.** We fail to reject the null hypothesis at α={alpha}. The observed difference could be due to random variance.")
             
         # Draw Normal Curve using helper
         curve_data = get_normal_distribution_data(test_results['critical_z'])
@@ -385,7 +385,7 @@ with tab_ab_testing:
         )
         st.plotly_chart(fig_curve, width="stretch")
 
-    st.markdown("### 💡 Experimentation Insight")
+    st.markdown("### Experimentation Insight")
     
     # Calculate recommended size details safely
     req_size = test_results['required_sample_size']

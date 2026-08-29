@@ -10,7 +10,7 @@ RAW_CSV_PATH = os.path.join(PROJECT_DIR, "data", "raw", "online_retail.csv")
 PROCESSED_DB_PATH = os.path.join(PROJECT_DIR, "data", "processed", "ecommerce.db")
 
 def run_data_pipeline():
-    print("🚀 Starting Data Cleaning and Feature Engineering Pipeline...")
+    print("Starting Data Cleaning and Feature Engineering Pipeline...")
     
     # Ensure raw data exists
     if not os.path.exists(RAW_CSV_PATH):
@@ -24,7 +24,7 @@ def run_data_pipeline():
     print(f"Loaded {df.shape[0]:,} rows.")
     
     # ------------------ PHASE 1: DATA CLEANING ------------------
-    print("\n🧹 Phase 1: Data Cleaning...")
+    print("\nPhase 1: Data Cleaning...")
     
     # Remove duplicates
     dup_count = df.duplicated().sum()
@@ -62,7 +62,7 @@ def run_data_pipeline():
     print(f"Capped outliers: Removed {original_len - len(df):,} transactions.")
     
     # ------------------ PHASE 2: FEATURE ENGINEERING ------------------
-    print("\n⚙️ Phase 2: Feature Engineering...")
+    print("\nPhase 2: Feature Engineering...")
     
     # Feature 1: Total Sales (Quantity * UnitPrice)
     df['TotalSales'] = df['Quantity'] * df['UnitPrice']
@@ -98,12 +98,12 @@ def run_data_pipeline():
     df['YearMonth'] = df['InvoiceDate'].dt.to_period('M').astype(str)
     
     # Save the cleaned transactions to SQLite database
-    print(f"\n💾 Saving {len(df):,} cleaned transactions to database...")
+    print(f"\nSaving {len(df):,} cleaned transactions to database...")
     conn = sqlite3.connect(PROCESSED_DB_PATH)
     df.to_sql("transactions", conn, if_exists="replace", index=False)
     
     # ------------------ CUSTOMER SEGMENTATION (RFM & CLV) ------------------
-    print("\n👤 Building Customer Profiles (RFM & CLV features)...")
+    print("\nBuilding Customer Profiles (RFM & CLV features)...")
     
     # Isolate registered customers (not Guest) for cohort & RFM profiling
     registered_tx = df[(df['CustomerID'] != 'Guest') & (~df['IsCancelled'])].copy()
@@ -171,7 +171,7 @@ def run_data_pipeline():
     print(f"\nTables created in SQLite: {[t[0] for t in tables]}")
     
     conn.close()
-    print("\n🎉 ETL Data Pipeline Completed Successfully! Database is ready.")
+    print("\nETL Data Pipeline Completed Successfully! Database is ready.")
 
 if __name__ == "__main__":
     run_data_pipeline()
