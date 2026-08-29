@@ -65,5 +65,14 @@ def train_and_save_model():
         
     print(f"\nSuccessfully saved trained pipeline to: {MODEL_PATH}")
 
+    # Export evaluation metrics to a text log file
+    metrics_path = os.path.join(MODEL_DIR, "metrics.txt")
+    with open(metrics_path, "w") as f:
+        f.write("Model Evaluation Metrics\n")
+        f.write("========================\n\n")
+        f.write(classification_report(y_test, y_pred))
+        f.write(f"\nROC-AUC Score: {roc_auc_score(y_test, y_pred_proba):.4f}\n")
+    print(f"Saved evaluation metrics to: {metrics_path}")
+
 if __name__ == "__main__":
     train_and_save_model()
