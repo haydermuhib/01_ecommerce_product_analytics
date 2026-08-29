@@ -366,6 +366,66 @@ with tab_products:
     )
     st.plotly_chart(fig_pareto, width="stretch")
 
+    st.markdown("---")
+    st.subheader("Seasonal Product Performance")
+    st.markdown("<p style='font-size:12px;color:gray;'>Analyze top-selling products by season to uncover seasonal demand shifts.</p>", unsafe_allow_html=True)
+    
+    # Map months to seasons
+    df_filtered['Season'] = df_filtered['InvoiceDate'].dt.month.map(
+        lambda m: "Winter" if m in [12, 1, 2] else "Spring" if m in [3, 4, 5] else "Summer" if m in [6, 7, 8] else "Autumn"
+    )
+    
+    col_season_sel, col_season_chart = st.columns([1, 2])
+    with col_season_sel:
+        selected_season = st.selectbox("Select Season to Analyze", ["Winter", "Spring", "Summer", "Autumn"])
+        
+        # Filter for selected season and calculate top selling products
+        df_season = df_filtered[(df_filtered['Season'] == selected_season) & (~df_filtered['IsCancelled'])]
+        df_season_top = df_season.groupby('Description').agg(
+            Revenue=('TotalSales', 'sum'),
+            Units=('Quantity', 'sum')
+        ).reset_index().sort_values(by='Revenue', ascending=False).head(10)
+        
+        st.write("")
+        if len(df_season_top) > 0:
+            st.markdown(f"""
+            **Seasonal Highlights for {selected_season}:**
+            * Total transactions analyzed: **{len(df_season):,}**
+            * Top revenue generator: **{df_season_top.iloc[0]['Description']}**
+            * Total seasonal revenue: **${df_season['TotalSales'].sum():,.2f}**
+            """)
+        else:
+            st.markdown(f"""
+            **Seasonal Highlights for {selected_season}:**
+            * Total transactions analyzed: **0**
+            * Top revenue generator: **N/A**
+            * Total seasonal revenue: **$0.00**
+            """)
+        
+    with col_season_chart:
+        if len(df_season_top) > 0:
+            # Sort values so that the highest bar appears at the top of the horizontal bar chart
+            df_season_top = df_season_top.sort_values(by='Revenue', ascending=True)
+            fig_season = px.bar(
+                df_season_top,
+                x='Revenue',
+                y='Description',
+                orientation='h',
+                title=f"Top 10 Products by Revenue in {selected_season}",
+                labels={'Revenue': 'Revenue ($)', 'Description': 'Product'},
+                color_discrete_sequence=['#009999']
+            )
+            fig_season.update_layout(
+                margin=dict(l=10, r=10, t=30, b=10),
+                height=350,
+                font=dict(family="Space Mono", color="#E3E5E8"),
+                plot_bgcolor="rgba(0,0,0,0)",
+                paper_bgcolor="rgba(0,0,0,0)"
+            )
+            st.plotly_chart(fig_season, width="stretch")
+        else:
+            st.warning(f"No transaction records found for the season: {selected_season} in the current filtered dataset.")
+
 # ------------------ TAB 4: A/B TESTING SIMULATOR ------------------
 with tab_ab_testing:
     st.subheader("Checkout Flow Redesign A/B Test Evaluator")
