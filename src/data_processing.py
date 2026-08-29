@@ -48,3 +48,57 @@ def calculate_cohort_retention(df_tx):
     retention = cohort_pivot.divide(cohort_sizes, axis=0) * 100
     
     return retention
+
+def map_season_hemisphere(row):
+    """
+    Identifies the correct season for a transaction row, taking into account
+    the precomputed Hemisphere column (e.g. Southern vs Northern).
+    """
+    month = row['InvoiceDate'].month
+    hemisphere = row['Hemisphere']
+    
+    if hemisphere == 'Southern':
+        if month in [12, 1, 2]:
+            return "Summer"
+        elif month in [3, 4, 5]:
+            return "Autumn"
+        elif month in [6, 7, 8]:
+            return "Winter"
+        else:
+            return "Spring"
+    else:
+        if month in [12, 1, 2]:
+            return "Winter"
+        elif month in [3, 4, 5]:
+            return "Spring"
+        elif month in [6, 7, 8]:
+            return "Summer"
+        else:
+            return "Autumn"
+
+
+def calculate_seasonal_product_data(df_filtered, selected_season, metric_direction, num_products):
+    """
+    Calculates product performance metrics filtered by hemisphere-aware seasons.
+    Returns grouped seasonal dataset and the sliced top/bottom performers dataframe.
+    """
+    df_filtered_copy = df_filtered.copy()
+    df_filtered_copy['Season'] = df_filtered_copy.apply(map_season_hemisphere, axis=1)
+    
+    # Filter for active seasonal records
+    df_season = df_filtered_copy[(df_filtered_copy['Season'] == selected_season) & (~df_filtered_copy['IsCancelled'])]
+    
+    # Group by product description
+    df_season_grouped = df_season.groupby('Description').agg(
+        Revenue=('TotalSales', 'sum'),
+        Units=('Quantity', 'sum')
+    ).reset_index()
+    
+    # Select performance direction
+    if "Bottom" in metric_direction:
+        df_season_grouped = df_season_grouped[df_season_grouped['Revenue'] > 0]
+        df_season_top = df_season_grouped.sort_values(by='Revenue', ascending=True).head(num_products)
+    else:
+        df_season_top = df_season_grouped.sort_values(by='Revenue', ascending=False).head(num_products)
+        
+    return df_season, df_season_top

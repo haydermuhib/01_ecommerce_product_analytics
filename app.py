@@ -95,7 +95,7 @@ import sys
 sys.path.insert(0, os.path.join(os.path.dirname(os.path.abspath(__file__)), "src"))
 
 # Import modular helper functions
-from data_processing import load_data_from_db, calculate_cohort_retention
+from data_processing import load_data_from_db, calculate_cohort_retention, calculate_seasonal_product_data
 from stats_helpers import perform_z_proportion_test, get_normal_distribution_data
 
 @st.cache_data
@@ -370,37 +370,6 @@ with tab_products:
     st.subheader("Seasonal Product Performance")
     st.markdown("<p style='font-size:12px;color:gray;'>Analyze product performance by season with hemisphere-aware date partitioning.</p>", unsafe_allow_html=True)
     
-    # Hemisphere-aware Season Mapping function
-    def map_season_hemisphere(row):
-        month = row['InvoiceDate'].month
-        country = row['Country']
-        
-        # Southern Hemisphere countries (e.g., Australia is in the online retail dataset)
-        southern_countries = ["Australia", "New Zealand", "South Africa", "Brazil"]
-        
-        if country in southern_countries:
-            if month in [12, 1, 2]:
-                return "Summer"
-            elif month in [3, 4, 5]:
-                return "Autumn"
-            elif month in [6, 7, 8]:
-                return "Winter"
-            else:
-                return "Spring"
-        else:
-            # Northern Hemisphere default (UK, Germany, France, etc.)
-            if month in [12, 1, 2]:
-                return "Winter"
-            elif month in [3, 4, 5]:
-                return "Spring"
-            elif month in [6, 7, 8]:
-                return "Summer"
-            else:
-                return "Autumn"
-
-    # Map seasons on filtered dataframe
-    df_filtered['Season'] = df_filtered.apply(map_season_hemisphere, axis=1)
-    
     col_season_sel, col_season_chart = st.columns([1, 2])
     with col_season_sel:
         selected_season = st.selectbox("Select Season to Analyze", ["Winter", "Spring", "Summer", "Autumn"])
@@ -409,21 +378,8 @@ with tab_products:
         metric_direction = st.radio("Performance Direction", ["Top Selling (High Revenue)", "Bottom Selling (Low Revenue)"])
         num_products = st.slider("Number of Products to Display", min_value=5, max_value=50, value=10, step=5)
         
-        # Filter for selected season and calculate product metrics
-        df_season = df_filtered[(df_filtered['Season'] == selected_season) & (~df_filtered['IsCancelled'])]
-        
-        # Group by description
-        df_season_grouped = df_season.groupby('Description').agg(
-            Revenue=('TotalSales', 'sum'),
-            Units=('Quantity', 'sum')
-        ).reset_index()
-        
-        # Filter out 0 revenue items if checking bottom selling
-        if "Bottom" in metric_direction:
-            df_season_grouped = df_season_grouped[df_season_grouped['Revenue'] > 0]
-            df_season_top = df_season_grouped.sort_values(by='Revenue', ascending=True).head(num_products)
-        else:
-            df_season_top = df_season_grouped.sort_values(by='Revenue', ascending=False).head(num_products)
+        # Fetch clean seasonal datasets via modular helper
+        df_season, df_season_top = calculate_seasonal_product_data(df_filtered, selected_season, metric_direction, num_products)
         
         st.write("")
         if len(df_season_top) > 0:
