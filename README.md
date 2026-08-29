@@ -1,6 +1,8 @@
 # E-Commerce Product Analytics Dashboard
 ## Technical portfolio presentation
 
+**Live Dashboard Application:** [01ecommerce-analytics.streamlit.app](https://01ecommerce-analytics.streamlit.app/)
+
 **Duration:** 10 minutes review
 **Audience:** Technical Recruiters and Hiring Managers
 **Date:** 2026-08-29
