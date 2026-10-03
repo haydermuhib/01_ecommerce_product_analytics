@@ -2,6 +2,7 @@
 .venv/
 venv/
 ENV/
+.pixi/
 
 # Python cache & compiled files
 __pycache__/
@@ -12,6 +13,7 @@ __pycache__/
 # Jupyter Notebook checkpoints
 .ipynb_checkpoints
 
+# Raw Data
 data/raw/
 
 # IDEs
@@ -20,10 +22,7 @@ data/raw/
 .gemini/
 .agents/
 
-
-#notebook
-notebooks/test.ipynb
-
-#etc
+# Design Blueprint and Rules (Permanently Git-Ignored per Project Rules)
+Design.md
+PROJECT_RULES.md
 project_plan.md
-project_design_rules.md
