@@ -36,7 +36,8 @@ def run_data_pipeline():
     df['Description'] = df['Description'].fillna("Unlabeled Item").str.strip()
     
     # Cast InvoiceDate to datetime
-    df['InvoiceDate'] = pd.to_datetime(df['InvoiceDate'], format='mixed')
+    invoice_dt = pd.to_datetime(df['InvoiceDate'], format='mixed')
+    df['InvoiceDate'] = invoice_dt
     
     # Identify Cancellations (InvoiceNo starting with 'C' or negative Quantity)
     df['IsCancelled'] = df['InvoiceNo'].astype(str).str.startswith('C') | (df['Quantity'] < 0)
@@ -74,7 +75,7 @@ def run_data_pipeline():
     df['Profit'] = df['TotalSales'] - df['COGS']
     
     # Feature 4: Hour Bin
-    df['Hour'] = df['InvoiceDate'].dt.hour
+    df['Hour'] = invoice_dt.dt.hour
     df['HourBin'] = pd.cut(
         df['Hour'], 
         bins=[0, 6, 12, 18, 24], 
@@ -83,8 +84,8 @@ def run_data_pipeline():
     ).astype(str)
     
     # Feature 5: Day of Week & Day Type (Weekend vs Weekday)
-    df['DayOfWeek'] = df['InvoiceDate'].dt.day_name()
-    df['IsWeekend'] = df['InvoiceDate'].dt.dayofweek.isin([5, 6]).astype(int)
+    df['DayOfWeek'] = invoice_dt.dt.day_name()
+    df['IsWeekend'] = invoice_dt.dt.dayofweek.isin([5, 6]).astype(int)
     df['DayType'] = df['IsWeekend'].map({1: 'Weekend', 0: 'Weekday'})
     
     # Feature 6: Order Size Category
@@ -95,7 +96,7 @@ def run_data_pipeline():
     ).astype(str)
     
     # Feature 7: YearMonth (for monthly cohort group sizing)
-    df['YearMonth'] = df['InvoiceDate'].dt.strftime('%Y-%m')
+    df['YearMonth'] = invoice_dt.dt.strftime('%Y-%m')
     
     # Feature 8: Hemisphere classification (Northern vs Southern)
     southern_countries = ["Australia", "New Zealand", "South Africa", "Brazil"]
