@@ -95,11 +95,12 @@ def run_data_pipeline():
     ).astype(str)
     
     # Feature 7: YearMonth (for monthly cohort group sizing)
-    df['YearMonth'] = df['InvoiceDate'].dt.to_period('M').astype(str)
+    df['YearMonth'] = df['InvoiceDate'].dt.strftime('%Y-%m')
     
     # Feature 8: Hemisphere classification (Northern vs Southern)
     southern_countries = ["Australia", "New Zealand", "South Africa", "Brazil"]
-    df['Hemisphere'] = np.where(df['Country'].isin(southern_countries), 'Southern', 'Northern')
+    df['Hemisphere'] = 'Northern'
+    df.loc[df['Country'].isin(southern_countries), 'Hemisphere'] = 'Southern'
     
     # Save the cleaned transactions to SQLite database
     print(f"\nSaving {len(df):,} cleaned transactions to database...")
