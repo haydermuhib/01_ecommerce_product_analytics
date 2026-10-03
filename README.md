@@ -25,6 +25,16 @@ E-commerce businesses frequently struggle with high customer acquisition costs p
 
 This project delivers an end-to-end analytical solution processing over 540,000 real-world retail transactions. It models customer lifetime value, evaluates checkout redesigns using statistical hypothesis testing, and flags churn risk with predictive machine learning.
 
+### Analytical Scope and Business Discipline
+This project represents a dedicated **Product Growth Analytics and Predictive Experimentation** suite designed for product-led growth teams and data scientists:
+
+- **Analytical Discipline:** Supervised Machine Learning (Churn Classification), Statistical Hypothesis Testing (Two-Tailed Z-Tests), and Product Growth Simulation.
+- **Core Business Questions Answered:**
+  1. Which customers are at imminent risk of churning, and what behavioral features most strongly drive retention failure?
+  2. Did a checkout funnel intervention produce a statistically significant conversion lift, and did the experiment achieve adequate statistical power?
+  3. What are the minimum detectable effect sizes and required sample sizes before launching new product features?
+- **Target Stakeholders:** Product Managers, Growth Data Scientists, Experimentation Leads, and Conversion Rate Optimization (CRO) Engineers.
+
 ### Key project outcomes
 - Cleaned and harmonized 541,909 raw transaction logs, isolating returns, credit cancellations, and guest sessions into an optimized SQLite analytical database.
 - Implemented monthly customer cohort tracking, uncovering a 60% retention drop within the first 30 days that stabilizes into predictable long-term buying behavior.
